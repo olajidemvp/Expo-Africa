@@ -1,6 +1,6 @@
 # ExpoAfrica
 
-A job board platform connecting international organizations with skilled local professionals in Nigeria. Find sales agents, translators, event coordinators, and more.
+A premium talent marketplace connecting international exhibitions and conferences with skilled local professionals across 5 African countries (Nigeria, Kenya, Ghana, South Africa, and Egypt). Find sales agents, translators, event coordinators, and more.
 
 ## Features
 

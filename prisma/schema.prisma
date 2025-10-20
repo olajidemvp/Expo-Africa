@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  companyName   String
+  description   String?
+  industry      String
+  country       String
+  city          String?
+  website       String?
+  phone         String?
+  verified      Boolean  @default(false)
+  logo          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  jobs          Job[]
+  applications  Application[]
+  messages      Message[]
+
+  @@index([email])
+  @@index([country])
+  @@index([verified])
+}
+
+model LocalStaff {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  password          String
+  firstName         String
+  lastName          String
+  phone             String
+  country           String
+  city              String
+  dateOfBirth       DateTime?
+
+  // Professional Information
+  title             String?
+  bio               String?
+  experience        String?  // Junior, Mid-level, Senior, Expert
+  hourlyRate        Float?
+  availability      String   @default("Full-time")
+
+  // Skills and Languages
+  skills            String   // JSON array of skills
+  languages         String   // JSON array of languages with proficiency
+
+  // Portfolio and Links
+  portfolio         String?
+  linkedin          String?
+  resume            String?
+  photo             String?
+
+  // Verification
+  verified          Boolean  @default(false)
+  available         Boolean  @default(true)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  applications      Application[]
+  messages          Message[]
+
+  @@index([email])
+  @@index([country])
+  @@index([city])
+  @@index([available])
+}
+
+model Job {
+  id                String   @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String
+  category          String   // Sales, Translation, Events, Marketing, Tech, etc.
+  type              String   // Full-time, Part-time, Contract, Freelance
+  location          String
+  country           String
+  remote            Boolean  @default(false)
+
+  // Requirements
+  requiredSkills    String   // JSON array
+  experience        String?  // Junior, Mid-level, Senior
+  languages         String?  // JSON array
+
+  // Compensation
+  salary            String?
+  currency          String   @default("USD")
+
+  // Status
+  status            String   @default("active") // active, closed, draft
+  views             Int      @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  expiresAt         DateTime?
+
+  applications      Application[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([category])
+  @@index([country])
+}
+
+model Application {
+  id                String   @id @default(cuid())
+  jobId             String
+  job               Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  localStaffId      String
+  localStaff        LocalStaff @relation(fields: [localStaffId], references: [id], onDelete: Cascade)
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  coverLetter       String?
+  status            String   @default("pending") // pending, reviewing, shortlisted, interview, accepted, rejected
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  messages          Message[]
+
+  @@unique([jobId, localStaffId])
+  @@index([jobId])
+  @@index([localStaffId])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Message {
+  id                String   @id @default(cuid())
+  applicationId     String
+  application       Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  senderId          String
+  senderType        String   // organization or localStaff
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  localStaffId      String?
+  localStaff        LocalStaff? @relation(fields: [localStaffId], references: [id], onDelete: Cascade)
+
+  content           String
+  read              Boolean  @default(false)
+
+  createdAt         DateTime @default(now())
+
+  @@index([applicationId])
+  @@index([senderId])
+}
