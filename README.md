@@ -2,6 +2,17 @@
 
 A premium talent marketplace connecting international exhibitions and conferences with skilled local professionals across 5 African countries (Nigeria, Kenya, Ghana, South Africa, and Egypt). Find sales agents, translators, event coordinators, and more.
 
+## 🚀 Quick Deploy
+
+Deploy your own instance in minutes:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/olajidemvp/Expo-Africa&env=DATABASE_URL,DIRECT_DATABASE_URL,JWT_SECRET,NEXTAUTH_SECRET,NEXTAUTH_URL&envDescription=Required%20environment%20variables%20for%20ExpoAfrica&envLink=https://github.com/olajidemvp/Expo-Africa/blob/main/DEPLOYMENT.md)
+
+**New to deployment?** Follow our guides:
+- 📘 [5-Minute Quick Deploy Guide](./QUICKSTART-DEPLOY.md) - **Start here!**
+- 📗 [Complete Deployment Guide](./DEPLOYMENT.md) - Detailed instructions
+- 📕 [Setup Guide](./SETUP.md) - Local development setup
+
 ## Features
 
 ### For Organizations
@@ -141,16 +152,25 @@ npx prisma db push --force-reset
 
 ## Deployment
 
-### Database Setup (Production)
-1. Set up PostgreSQL database
-2. Update `DATABASE_URL` in environment variables
-3. Run migrations: `npx prisma db push`
+### ⚡ Quick Deploy (Recommended)
+See our [Quick Deploy Guide](./QUICKSTART-DEPLOY.md) for 5-minute deployment to Vercel.
 
-### Environment Variables (Production)
+### 📚 Full Deployment Guides
+- **Vercel** (Recommended): See [DEPLOYMENT.md](./DEPLOYMENT.md#-recommended-deploy-to-vercel)
+- **Netlify** (Alternative): See [DEPLOYMENT.md](./DEPLOYMENT.md#-alternative-deploy-to-netlify)
+
+### Required Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string
-- `JWT_SECRET`: Strong random string for JWT signing
-- `NEXTAUTH_URL`: Your domain URL
-- `NEXTAUTH_SECRET`: NextAuth.js secret
+- `DIRECT_DATABASE_URL`: Direct PostgreSQL URL (for migrations)
+- `JWT_SECRET`: Strong random string (generate with `openssl rand -base64 32`)
+- `NEXTAUTH_URL`: Your deployment URL
+- `NEXTAUTH_SECRET`: Another strong random string
+
+### Recommended Database Providers (All have free tiers)
+- **Vercel Postgres** - Easiest, integrated with Vercel
+- **Neon** - Generous free tier, serverless PostgreSQL
+- **Supabase** - Includes auth and storage
+- **Railway** - Simple setup
 
 ## Contributing
 
