@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
-    const hashedPassword = hashPassword(data.password)
+    // Hash password with bcrypt (secure)
+    const hashedPassword = await hashPassword(data.password)
 
     // Create user based on type
     if (userType === 'talent') {

@@ -22,7 +22,16 @@ export async function POST(request: NextRequest) {
         where: { email },
       })
 
-      if (!user || !verifyPassword(password, user.password)) {
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        )
+      }
+
+      // Verify password with bcrypt
+      const isValidPassword = await verifyPassword(password, user.password)
+      if (!isValidPassword) {
         return NextResponse.json(
           { error: 'Invalid email or password' },
           { status: 401 }
@@ -53,7 +62,16 @@ export async function POST(request: NextRequest) {
         where: { email },
       })
 
-      if (!user || !verifyPassword(password, user.password)) {
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        )
+      }
+
+      // Verify password with bcrypt
+      const isValidPassword = await verifyPassword(password, user.password)
+      if (!isValidPassword) {
         return NextResponse.json(
           { error: 'Invalid email or password' },
           { status: 401 }

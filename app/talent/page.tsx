@@ -1,85 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
-// Mock data for demonstration
-const mockTalent = [
-  {
-    id: '1',
-    name: 'Adaeze Okonkwo',
-    title: 'Senior Sales Agent',
-    location: 'Lagos, Nigeria',
-    experience: 'Senior',
-    hourlyRate: 45,
-    availability: 'Full-time',
-    skills: ['Sales', 'Customer Service', 'B2B', 'Negotiation'],
-    languages: ['English', 'Igbo', 'Yoruba'],
-    photo: null,
-    verified: true,
-    rating: 4.8,
-  },
-  {
-    id: '2',
-    name: 'Kwame Mensah',
-    title: 'English-French Translator',
-    location: 'Accra, Ghana',
-    experience: 'Expert',
-    hourlyRate: 60,
-    availability: 'Freelance',
-    skills: ['Translation', 'Interpretation', 'Technical Writing'],
-    languages: ['English', 'French', 'Akan'],
-    photo: null,
-    verified: true,
-    rating: 5.0,
-  },
-  {
-    id: '3',
-    name: 'Amara Nwankwo',
-    title: 'Event Coordinator',
-    location: 'Nairobi, Kenya',
-    experience: 'Mid-level',
-    hourlyRate: 35,
-    availability: 'Contract',
-    skills: ['Event Planning', 'Project Management', 'Vendor Relations'],
-    languages: ['English', 'Swahili'],
-    photo: null,
-    verified: true,
-    rating: 4.7,
-  },
-  {
-    id: '4',
-    name: 'Fatima Hassan',
-    title: 'Digital Marketing Specialist',
-    location: 'Cairo, Egypt',
-    experience: 'Senior',
-    hourlyRate: 50,
-    availability: 'Part-time',
-    skills: ['Social Media Marketing', 'Content Creation', 'SEO', 'Analytics'],
-    languages: ['Arabic', 'English', 'French'],
-    photo: null,
-    verified: true,
-    rating: 4.9,
-  },
-  {
-    id: '5',
-    name: 'Thabo Mabaso',
-    title: 'Professional Photographer',
-    location: 'Cape Town, South Africa',
-    experience: 'Senior',
-    hourlyRate: 55,
-    availability: 'Freelance',
-    skills: ['Event Photography', 'Photo Editing', 'Videography'],
-    languages: ['English', 'Afrikaans', 'Xhosa'],
-    photo: null,
-    verified: false,
-    rating: 4.6,
-  },
-]
+interface Talent {
+  id: string
+  name: string
+  firstName: string
+  lastName: string
+  title: string
+  location: string
+  country: string
+  city: string
+  experience: string
+  hourlyRate: number | null
+  availability: string
+  skills: string[]
+  languages: Array<{ language: string; proficiency: string }>
+  photo: string | null
+  verified: boolean
+  rating: number
+}
 
 export default function TalentPage() {
+  const [talents, setTalents] = useState<Talent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
     skill: '',
@@ -95,19 +44,45 @@ export default function TalentPage() {
   const countries = ['Nigeria', 'Kenya', 'Ghana', 'South Africa', 'Egypt']
   const availabilityOptions = ['Full-time', 'Part-time', 'Contract', 'Freelance']
 
-  // Filter talent based on search and filters
-  const filteredTalent = mockTalent.filter((person) => {
-    const matchesSearch = person.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         person.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         person.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
-    const matchesSkill = !filters.skill || person.skills.includes(filters.skill)
-    const matchesExperience = !filters.experience || person.experience === filters.experience
-    const matchesLocation = !filters.location || person.location.includes(filters.location)
-    const matchesAvailability = !filters.availability || person.availability === filters.availability
-    const matchesVerified = !filters.verifiedOnly || person.verified
+  // Fetch talent from API
+  useEffect(() => {
+    const fetchTalent = async () => {
+      setLoading(true)
+      setError('')
 
-    return matchesSearch && matchesSkill && matchesExperience && matchesLocation && matchesAvailability && matchesVerified
-  })
+      try {
+        // Build query string
+        const params = new URLSearchParams()
+        if (searchQuery) params.append('search', searchQuery)
+        if (filters.skill) params.append('skill', filters.skill)
+        if (filters.experience) params.append('experience', filters.experience)
+        if (filters.location) params.append('country', filters.location)
+        if (filters.availability) params.append('availability', filters.availability)
+        if (filters.verifiedOnly) params.append('verifiedOnly', 'true')
+
+        const response = await fetch(\`/api/talent?\${params.toString()}\`)
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch talent')
+        }
+
+        const data = await response.json()
+        setTalents(data.talents || [])
+      } catch (err) {
+        setError('Failed to load professionals. Please try again later.')
+        console.error('Error fetching talent:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchTalent()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, filters])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -169,7 +144,7 @@ export default function TalentPage() {
             </div>
 
             {/* Filters */}
-            <div className={`${showFilters ? 'block' : 'hidden'} md:block mt-4`}>
+            <div className={\`\${showFilters ? 'block' : 'hidden'} md:block mt-4\`}>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <select
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -235,16 +210,44 @@ export default function TalentPage() {
               </div>
             </div>
 
-            {/* Results count */}
-            <div className="mt-4 text-sm text-gray-600">
-              {filteredTalent.length} professional{filteredTalent.length !== 1 ? 's' : ''} found
+            {/* Results count & Loading indicator */}
+            <div className="mt-4 flex items-center gap-4">
+              {loading ? (
+                <div className="text-sm text-gray-600">Loading professionals...</div>
+              ) : (
+                <div className="text-sm text-gray-600">
+                  {talents.length} professional{talents.length !== 1 ? 's' : ''} found
+                </div>
+              )}
             </div>
           </div>
         </section>
 
         {/* Talent Grid */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {filteredTalent.length === 0 ? (
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 animate-pulse">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+              ))}
+            </div>
+          ) : talents.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600 text-lg">No professionals found matching your criteria.</p>
               <button
@@ -259,7 +262,7 @@ export default function TalentPage() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTalent.map((person) => (
+              {talents.map((person) => (
                 <div
                   key={person.id}
                   className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-200"
@@ -267,7 +270,7 @@ export default function TalentPage() {
                   {/* Profile Header */}
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-                      {person.name.split(' ').map(n => n[0]).join('')}
+                      {person.firstName.charAt(0)}{person.lastName.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -284,14 +287,14 @@ export default function TalentPage() {
                           {[...Array(5)].map((_, i) => (
                             <svg
                               key={i}
-                              className={`w-4 h-4 ${i < Math.floor(person.rating) ? 'fill-current' : 'fill-gray-300'}`}
+                              className={\`w-4 h-4 \${i < Math.floor(person.rating) ? 'fill-current' : 'fill-gray-300'}\`}
                               viewBox="0 0 20 20"
                             >
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
                           ))}
                         </div>
-                        <span className="text-sm text-gray-600">({person.rating})</span>
+                        <span className="text-sm text-gray-600">({person.rating.toFixed(1)})</span>
                       </div>
                     </div>
                   </div>
@@ -308,9 +311,11 @@ export default function TalentPage() {
                       <span className="text-sm text-gray-600">{person.experience}</span>
                       <span className="text-sm text-gray-600">{person.availability}</span>
                     </div>
-                    <div className="text-lg font-semibold text-blue-600">
-                      ${person.hourlyRate}/hour
-                    </div>
+                    {person.hourlyRate && (
+                      <div className="text-lg font-semibold text-blue-600">
+                        \${person.hourlyRate}/hour
+                      </div>
+                    )}
                   </div>
 
                   {/* Skills */}
@@ -336,12 +341,15 @@ export default function TalentPage() {
                   {/* Languages */}
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Languages</h4>
-                    <p className="text-sm text-gray-600">{person.languages.join(', ')}</p>
+                    <p className="text-sm text-gray-600">
+                      {person.languages.slice(0, 2).map((lang) => lang.language).join(', ')}
+                      {person.languages.length > 2 && \` +\${person.languages.length - 2} more\`}
+                    </p>
                   </div>
 
                   {/* Action Button */}
                   <Link
-                    href={`/talent/${person.id}`}
+                    href={\`/talent/\${person.id}\`}
                     className="block w-full text-center btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     View Profile
